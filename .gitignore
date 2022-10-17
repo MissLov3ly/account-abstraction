@@ -1,6 +1,6 @@
 node_modules
+mnemonic.txt
 .env
-.swp
 
 #Hardhat files
 cache
@@ -18,5 +18,3 @@ artifacts
 /coverage.json
 /.DS_Store
 .DS_Store
-/contracts/dist/
-/contracts/types/
