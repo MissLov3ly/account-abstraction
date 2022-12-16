@@ -104,10 +104,10 @@ describe('EntryPoint with paymaster', function () {
         }, accountOwner, entryPoint)
         await expect(entryPoint.callStatic.handleOps([op], beneficiaryAddress, {
           gasLimit: 1e7
-        })).to.revertedWith('AA33 reverted: TokenPaymaster: no balance')
+        }).catch(rethrow())).to.revertedWith('TokenPaymaster: no balance')
         await expect(entryPoint.handleOps([op], beneficiaryAddress, {
           gasLimit: 1e7
-        })).to.revertedWith('AA33 reverted: TokenPaymaster: no balance')
+        }).catch(rethrow())).to.revertedWith('TokenPaymaster: no balance')
       })
     })
 
@@ -115,6 +115,7 @@ describe('EntryPoint with paymaster', function () {
       let createOp: UserOperation
       let created = false
       const beneficiaryAddress = createAddress()
+      // const accountOwner = createAccountOwner() // TODO: not clear how it worked earlier - the account is already deployed by global 'before'
 
       it('should reject if account not funded', async () => {
         const op = await fillAndSign({
@@ -130,7 +131,7 @@ describe('EntryPoint with paymaster', function () {
       it('should succeed to create account with tokens', async () => {
         createOp = await fillAndSign({
           initCode: getAccountDeployer(entryPoint.address, accountOwner.address, 3),
-          verificationGasLimit: 2e6,
+          verificationGasLimit: 1e7,
           paymasterAndData: paymaster.address,
           nonce: 0
         }, accountOwner, entryPoint)

@@ -2,24 +2,27 @@ import { ethers } from 'hardhat'
 import {
   arrayify,
   hexConcat,
+  Interface,
   keccak256,
   parseEther
 } from 'ethers/lib/utils'
 import { BigNumber, BigNumberish, Contract, ContractReceipt, Signer, Wallet } from 'ethers'
 import {
+  ERC1967Proxy__factory,
   EntryPoint,
   EntryPoint__factory,
   IERC20,
   IEntryPoint,
   SimpleAccount,
   SimpleAccountFactory__factory,
-  SimpleAccount__factory, SimpleAccountFactory, TestAggregatedAccountFactory
+  SimpleAccount__factory, SimpleAccountFactory
 } from '../typechain'
-import { BytesLike } from '@ethersproject/bytes'
+import { BytesLike, hexValue } from '@ethersproject/bytes'
 import { expect } from 'chai'
 import { Create2Factory } from '../src/Create2Factory'
 import { debugTransaction } from './debugTx'
 import { UserOperation } from './UserOperation'
+import { zeroAddress } from 'ethereumjs-util'
 
 export const AddressZero = ethers.constants.AddressZero
 export const HashZero = ethers.constants.HashZero
@@ -92,7 +95,9 @@ export async function calcGasUsage (rcpt: ContractReceipt, entryPoint: EntryPoin
   return { actualGasCost }
 }
 
-// helper function to create the initCode to deploy the account, using our account factory.
+// helper function to create a deployer (initCode) call to our account. relies on the global "create2Deployer"
+// note that this is a very naive deployer: merely calls "create2", which means entire constructor code is passed
+// with each deployment. a better deployer will only receive the constructor parameters.
 export function getAccountInitCode (owner: string, factory: SimpleAccountFactory, salt = 0): BytesLike {
   return hexConcat([
     factory.address,
@@ -100,12 +105,15 @@ export function getAccountInitCode (owner: string, factory: SimpleAccountFactory
   ])
 }
 
-export async function getAggregatedAccountInitCode (entryPoint: string, factory: TestAggregatedAccountFactory, salt = 0): Promise<BytesLike> {
-  // the test aggregated account doesn't check the owner...
-  const owner = AddressZero
+export async function getAggregatedAccountInitCode (entryPoint: string, implementationAddress: string): Promise<BytesLike> {
+  const initializeCall = new Interface(SimpleAccount__factory.abi).encodeFunctionData('initialize', [zeroAddress()])
+  const accountCtr = new ERC1967Proxy__factory(ethers.provider.getSigner()).getDeployTransaction(implementationAddress, initializeCall).data!
+
+  const factory = new Create2Factory(ethers.provider)
+  const initCallData = factory.getDeployTransactionCallData(hexValue(accountCtr), 0)
   return hexConcat([
-    factory.address,
-    factory.interface.encodeFunctionData('createAccount', [owner, salt])
+    Create2Factory.contractAddress,
+    initCallData
   ])
 }
 
@@ -242,22 +250,22 @@ export async function checkForBannedOps (txHash: string, checkPaymaster: boolean
 }
 
 /**
- * process exception of ValidationResult
+ * process exception of SimulationResult
  * usage: entryPoint.simulationResult(..).catch(simulationResultCatch)
  */
 export function simulationResultCatch (e: any): any {
-  if (e.errorName !== 'ValidationResult') {
+  if (e.errorName !== 'SimulationResult') {
     throw e
   }
   return e.errorArgs
 }
 
 /**
- * process exception of ValidationResultWithAggregation
+ * process exception of SimulationResultWithAggregation
  * usage: entryPoint.simulationResult(..).catch(simulationResultWithAggregation)
  */
 export function simulationResultWithAggregationCatch (e: any): any {
-  if (e.errorName !== 'ValidationResultWithAggregation') {
+  if (e.errorName !== 'SimulationResultWithAggregation') {
     throw e
   }
   return e.errorArgs
