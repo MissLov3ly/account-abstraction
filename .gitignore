@@ -1,6 +1,4 @@
 node_modules
-.env
-.swp
 
 #Hardhat files
 cache
@@ -19,4 +17,4 @@ artifacts
 /.DS_Store
 .DS_Store
 
-*.tgz
+.env
