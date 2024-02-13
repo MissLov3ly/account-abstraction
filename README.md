@@ -1,5 +1,18 @@
-# ZeroDev Contracts
+Implementation of contracts for [ERC 4337](https://github.com/ethereum/EIPs/blob/3fd65b1a782912bfc18cb975c62c55f733c7c96e/EIPS/eip-4337.md) account abstraction via alternative mempool.
 
-This repo started as a fork of [the official AA repo](https://github.com/eth-infinitism/account-abstraction).
+# Resources
 
-ZeroDev-specific contracts [can be found here](https://github.com/zerodevapp/account-abstraction/tree/develop/contracts/zerodev).
+[Vitalik's post on account abstraction without Ethereum protocol changes](https://medium.com/infinitism/erc-4337-account-abstraction-without-ethereum-protocol-changes-d75c9d94dc4a)
+
+[Discord server](http://discord.gg/fbDyENb6Y9)
+
+# Deployments
+
+## Polygon Mumbai
+
+```
+==EntryPoint addr= 0x5f928C9afA19ffdB4529DDbdc384B5195A19Be15
+==SimpleAccountDeployer addr= 0x465C38f4B4A0c8e1866a36990Db6B660f5CEeb56
+==VerifyingPaymaster addr= 0x7EfD972E026d815febF347Eb48B9AaC6F5F78F8E
+==VerifyingPaymaster owner= 0x22222222F9d5B732dfe438d99E31926e3afD6FA2
+```

@@ -152,7 +152,7 @@ async function sendQueuedUserOps (queueSender: QueueSendUserOp, entryPoint: Entr
     const ret = await entryPoint.handleOps(ops, signer, { maxPriorityFeePerGas: 2e9 })
     console.log('handleop tx=', ret.hash)
     const rcpt = await ret.wait()
-    console.log('events=', rcpt.events!.map(e => ({ name: e.event, args: e.args })))
+    console.log('events=', rcpt.events!.map((e: any) => ({ name: e.event, args: e.args })))
   } finally {
     sending = false
   }
@@ -305,7 +305,7 @@ export class AASigner extends Signer {
           // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
           if (revertReasonEvents[0]) {
             console.log('rejecting with reason')
-            reject(new Error(`UserOp failed with reason: ${revertReasonEvents[0].args.revertReason}`)
+            reject(new Error(`UserOp failed with reason: ${revertReasonEvents[0].args.revertReason as string}`)
             )
             return
           }
@@ -320,7 +320,7 @@ export class AASigner extends Signer {
       entryPoint.on('UserOperationEvent', listener)
       // for some reason, 'on' takes at least 2 seconds to be triggered on local network. so add a one-shot timer:
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      setTimeout(async () => await entryPoint.queryFilter(entryPoint.filters.UserOperationEvent(userOpHash)).then(query => {
+      setTimeout(async () => await entryPoint.queryFilter(entryPoint.filters.UserOperationEvent(userOpHash)).then((query: any) => {
         if (query.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           listener(query[0])

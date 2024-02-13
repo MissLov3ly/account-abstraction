@@ -8,12 +8,13 @@ import {
   TestUtil__factory
 } from '../typechain'
 import {
+  AddressZero,
   createAddress,
   createAccountOwner,
   getBalance,
   isDeployed,
   ONE_ETH,
-  createAccount, HashZero
+  createAccount
 } from './testutils'
 import { fillUserOpDefaults, getUserOpHash, packUserOp, signUserOp } from './UserOp'
 import { parseEther } from 'ethers/lib/utils'
@@ -82,7 +83,7 @@ describe('SimpleAccount', function () {
       expectedPay = actualGasPrice * (callGasLimit + verificationGasLimit)
 
       preBalance = await getBalance(account.address)
-      const ret = await account.validateUserOp(userOp, userOpHash, expectedPay, { gasPrice: actualGasPrice })
+      const ret = await account.validateUserOp(userOp, userOpHash, AddressZero, expectedPay, { gasPrice: actualGasPrice })
       await ret.wait()
     })
 
@@ -94,15 +95,14 @@ describe('SimpleAccount', function () {
     it('should increment nonce', async () => {
       expect(await account.nonce()).to.equal(1)
     })
-
     it('should reject same TX on nonce error', async () => {
-      await expect(account.validateUserOp(userOp, userOpHash, 0)).to.revertedWith('invalid nonce')
+      await expect(account.validateUserOp(userOp, userOpHash, AddressZero, 0)).to.revertedWith('invalid nonce')
     })
-
-    it('should return NO_SIG_VALIDATION on wrong signature', async () => {
-      const userOpHash = HashZero
-      const deadline = await account.callStatic.validateUserOp({ ...userOp, nonce: 1 }, userOpHash, 0)
-      expect(deadline).to.eq(1)
+    it('should reject tx with wrong signature', async () => {
+      // validateUserOp doesn't check the actual UserOp for the signature, but relies on the userOpHash given by
+      // the entrypoint
+      const wrongUserOpHash = ethers.constants.HashZero
+      await expect(account.validateUserOp(userOp, wrongUserOpHash, AddressZero, 0)).to.revertedWith('account: wrong signature')
     })
   })
   context('SimpleAccountFactory', () => {
